@@ -1,6 +1,6 @@
 // Importa as dependências necessárias
 const express = require('express');
-const { MercadoPagoConfig, InPersonPayments } = require('mercadopago'); // CORREÇÃO: Usar a classe de pagamentos presenciais
+const { MercadoPagoConfig, Payment } = require('mercadopago'); // CORREÇÃO: a classe é 'Payment' (singular)
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -22,36 +22,28 @@ app.post('/api/create-pix-payment', async (req, res) => {
     try {
         const { quantity, amount } = req.body;
         
-        const orderData = {
-            external_id: `order-pix-${Date.now()}`,
-            title: `Números da Sorte Pix`,
-            description: `${quantity} unidades`,
-            total_amount: Number(amount),
-            items: [
-                {
-                    sku_number: '1',
-                    category: 'luck_numbers',
-                    title: `Números da Sorte`,
-                    description: `Compra de ${quantity} números`,
-                    unit_price: Number(amount),
-                    quantity: 1,
-                    unit_measure: 'unit'
-                }
-            ],
-            expiration_date: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+        const paymentData = {
+            transaction_amount: Number(amount),
+            description: `Números da Sorte Pix - ${quantity} unidades`,
+            payment_method_id: 'pix',
+            payer: {
+                email: 'christiancrmj16@gmail.com'
+            },
+            // Altere para a URL pública do seu backend no Render
+            notification_url: `https://backend-pix-r074.onrender.com/api/pix-webhook`
         };
 
-        // Usa a classe InPersonPayments para criar a ordem
-        const inPersonPaymentsClient = new InPersonPayments(client);
-        const order = await inPersonPaymentsClient.createOrder({ body: orderData });
+        // Instancie a classe 'Payment' e use o objeto 'client'
+        const paymentClient = new Payment(client);
+        const payment = await paymentClient.create({ body: paymentData });
 
-        const pix_code = order.qr.qr_code;
-        const qr_code_base64 = order.qr.qr_code_base64;
+        const pix_code = payment.point_of_interaction.transaction_data.qr_code;
+        const qr_code_base64 = payment.point_of_interaction.transaction_data.qr_code_base64;
 
-        res.status(200).json({
+        res.status(200).json({ 
             pix_code: pix_code,
             qr_code: `data:image/jpeg;base64,${qr_code_base64}`,
-            paymentId: order.id
+            paymentId: payment.id
         });
 
     } catch (error) {
