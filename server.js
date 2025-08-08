@@ -1,6 +1,6 @@
 // Importa as dependências necessárias
 const express = require('express');
-const { MercadoPagoConfig, payments } = require('mercadopago');
+const { MercadoPagoConfig, Payments } = require('mercadopago');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -32,7 +32,7 @@ app.post('/api/create-pix-payment', async (req, res) => {
             notification_url: `https://seusite.com/api/pix-webhook`
         };
 
-        const paymentClient = new payments(client);
+        const paymentClient = new Payments(client);
         const payment = await paymentClient.create({ body: paymentData });
 
         const pix_code = payment.point_of_interaction.transaction_data.qr_code;
