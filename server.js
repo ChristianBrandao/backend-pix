@@ -1,6 +1,6 @@
 // Importa as dependências necessárias
 const express = require('express');
-const mercadopago = require('mercadopago');
+const { MercadoPagoConfig, Payments } = require('mercadopago'); // Importação correta com a classe Payments
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -13,7 +13,7 @@ app.use(cors());
 
 // Configura o SDK do Mercado Pago
 // IMPORTANTE: Use variáveis de ambiente para a chave de acesso em um ambiente real.
-const client = new mercadopago.MercadoPagoConfig({
+const client = new MercadoPagoConfig({
     accessToken: 'APP_USR-8046348863440985-080101-ec5f3acae31f13e30ee83c06ddbedf23-242546340'
 });
 
@@ -33,8 +33,9 @@ app.post('/api/create-pix-payment', async (req, res) => {
             notification_url: `https://backend-pix-r074.onrender.com/api/pix-webhook`
         };
 
-        // Sintaxe corrigida para a API moderna
-        const payment = await client.payments.create({ body: paymentData });
+        // CORRIGIDO: Instancie a classe Payments e use o objeto 'client'
+        const paymentClient = new Payments(client);
+        const payment = await paymentClient.create({ body: paymentData });
 
         const pix_code = payment.point_of_interaction.transaction_data.qr_code;
         const qr_code_base64 = payment.point_of_interaction.transaction_data.qr_code_base64;
@@ -57,10 +58,8 @@ app.post('/api/pix-webhook', async (req, res) => {
     console.log('Webhook de pagamento recebido:', paymentInfo);
 
     try {
-        // Em uma aplicação real, você deve verificar a assinatura do webhook
         if (paymentInfo.type === 'payment' && paymentInfo.data.status === 'approved') {
             const paymentId = paymentInfo.data.id;
-            // Adicione a lógica para processar o pagamento e liberar os números do usuário
             console.log(`Pagamento #${paymentId} aprovado e processado.`);
         }
     } catch (error) {
@@ -70,8 +69,7 @@ app.post('/api/pix-webhook', async (req, res) => {
     res.status(200).send('OK');
 });
 
-
 // Inicia o servidor
 app.listen(PORT, () => {
-    console.log(`teste`);
+    console.log(`teste 3`);
 });
