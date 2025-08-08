@@ -1,6 +1,8 @@
 // Importa as dependências necessárias
 const express = require('express');
-const { MercadoPagoConfig, Payments } = require('mercadopago'); // Importação correta com a classe Payments
+const { MercadoPagoConfig } = require('mercadopago');
+// Importação correta: a classe Payments não é um export de nível superior
+const Payments = require('mercadopago/lib/resources/payments.js');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -33,7 +35,7 @@ app.post('/api/create-pix-payment', async (req, res) => {
             notification_url: `https://backend-pix-r074.onrender.com/api/pix-webhook`
         };
 
-        // CORRIGIDO: Instancie a classe Payments e use o objeto 'client'
+        // Instancie a classe Payments e use o objeto 'client'
         const paymentClient = new Payments(client);
         const payment = await paymentClient.create({ body: paymentData });
 
@@ -69,7 +71,8 @@ app.post('/api/pix-webhook', async (req, res) => {
     res.status(200).send('OK');
 });
 
+
 // Inicia o servidor
 app.listen(PORT, () => {
-    console.log(`teste 3`);
+    console.log(`Backend rodando em http://localhost:${PORT}`);
 });
